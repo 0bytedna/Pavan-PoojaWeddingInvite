@@ -39,7 +39,7 @@ const setVh = () => {
   document.documentElement.style.setProperty("--vh", vhPx + "px");
 };
 setVh();
-let lastW = window.innerWidth, rzTimer = 0;
+let lastW = window.innerWidth, rzTimer = 0, resizeFrame = 0;
 const remeasure = () => {
   setVh();
   scrub.resize();
@@ -50,7 +50,7 @@ window.addEventListener("resize", () => {
   // On touch devices ignore height-only resizes (URL bar collapse)
   if (IS_TOUCH && window.innerWidth === lastW) return;
   lastW = window.innerWidth;
-  remeasure();
+  if (!resizeFrame) resizeFrame = requestAnimationFrame(() => { resizeFrame = 0; remeasure(); });
   clearTimeout(rzTimer);
   rzTimer = setTimeout(remeasure, 280);   // settle pass after the browser finishes resizing
 });
@@ -238,10 +238,9 @@ const HAS_CIB = typeof createImageBitmap === "function";
 const createBitmapRing = ({ count, url, keyPrefix, ahead, behind, limit }) => {
   const slot = new Array(count);
   const st = new Uint8Array(count);      // 0 none · 1 loading · 2 ready · 3 failed
-  let center = 0, dir = 1, active = 0, streaming = false, retained = true, fullMode = false;
+  let center = 0, dir = 1, active = 0, streaming = false, retained = true, revision = 0;
 
   const evict = () => {
-    if (fullMode) return;               // everything stays resident — zero churn while scrubbing
     const ka = retained ? ahead + 6 : 2;
     const kb = retained ? behind + 6 : 2;
     const lo = dir >= 0 ? center - kb : center - ka;
@@ -264,6 +263,8 @@ const createBitmapRing = ({ count, url, keyPrefix, ahead, behind, limit }) => {
       if (im) { im._scrubKey = keyPrefix + i; slot[i] = im; st[i] = 2; }
       else { slot[i] = null; st[i] = 3; }
       active--;
+      revision++;
+      if (!retained) evict();
       if (done) done(!!im);
     };
     if (HAS_CIB) {
@@ -288,15 +289,14 @@ const createBitmapRing = ({ count, url, keyPrefix, ahead, behind, limit }) => {
     if (!streaming || !retained) return;
     while (active < limit) {
       let idx = -1;
-      const fwd = dir >= 0;
-      const aSpan = fwd ? ahead : behind, bSpan = fwd ? behind : ahead;
-      for (let d = 0; d <= aSpan; d++) {
-        const i = center + d;
-        if (i < count && st[i] === 0) { idx = i; break; }
+      // Load the playhead first, then prioritize the direction of travel.
+      for (let d = 0; d <= ahead; d++) {
+        const i = center + d * dir;
+        if (i >= 0 && i < count && st[i] === 0) { idx = i; break; }
       }
-      if (idx < 0) for (let d = 1; d <= bSpan; d++) {
-        const i = center - d;
-        if (i >= 0 && st[i] === 0) { idx = i; break; }
+      if (idx < 0) for (let d = 1; d <= behind; d++) {
+        const i = center - d * dir;
+        if (i >= 0 && i < count && st[i] === 0) { idx = i; break; }
       }
       if (idx < 0 || !load(idx, pump)) return;
     }
@@ -304,6 +304,7 @@ const createBitmapRing = ({ count, url, keyPrefix, ahead, behind, limit }) => {
 
   return {
     load,
+    revision: () => revision,
     reset: (i) => { if (st[i] === 3) st[i] = 0; },
     start: () => { if (!streaming) { streaming = true; pump(); } },
     setRetained: (next) => { retained = next; if (next) pump(); else evict(); },
@@ -325,28 +326,6 @@ const createBitmapRing = ({ count, url, keyPrefix, ahead, behind, limit }) => {
       }
       return null;
     },
-    /* Decode the ENTIRE film up front — scrolling then never waits on
-       network or decode. onProgress gets 0..1; done fires at completion. */
-    prebufferAll: (onProgress, done) => {
-      fullMode = true;
-      streaming = true;
-      let readyCount = 0, next = 0, inFlight = 0;
-      const bump = () => {
-        readyCount++;
-        if (onProgress) onProgress(readyCount / count);
-        if (readyCount >= count && done) done();
-      };
-      const pump = () => {
-        while (inFlight < 6 && next < count) {
-          const i = next++;
-          if (st[i] === 2 || st[i] === 3) { bump(); continue; }
-          if (st[i] === 1) { setTimeout(() => { bump(); pump(); }, 300); continue; }
-          inFlight++;
-          load(i, () => { inFlight--; bump(); pump(); });
-        }
-      };
-      pump();
-    },
     prime: (i, im) => {
       if (i >= 0 && i < count && im && (im.naturalWidth || im.width)) {
         im._scrubKey = keyPrefix + i;
@@ -359,26 +338,25 @@ const createBitmapRing = ({ count, url, keyPrefix, ahead, behind, limit }) => {
 
 /* Capability tier — iPhones report no deviceMemory, so assume capable there. */
 const RING_TIER = (() => {
-  const mem = Number(navigator.deviceMemory || 8);
+  const mem = Number(navigator.deviceMemory || (IS_TOUCH ? 4 : 8));
   const slow = /(^|-)2g$/.test((navigator.connection || {}).effectiveType || "");
   if (SAVE_DATA || slow || mem <= 2) return "lite";
   return mem < 4 ? "mid" : "full";
 })();
 
-/* Interpolation + full prebuffer: iPhones report no deviceMemory (assume 8). */
-const FULLBUFFER = RING_TIER === "full" && Number(navigator.deviceMemory || 8) >= 8;
+/* Keep decoded films bounded on every device, including high-memory desktops. */
 const INTERP = RING_TIER !== "lite";
 
 const frames = (() => {
   const N = CFG.frames.count;
   const name = (i) => CFG.frames.prefix + String(i + 1).padStart(3, "0") + CFG.frames.ext;
   const T = RING_TIER;
-  const hiEnabled = T !== "lite";
+  const hiEnabled = T === "full" && !IS_TOUCH && !SAVE_DATA;
   const loRing = createBitmapRing({
     count: N,
     url: (i) => CFG.frames.loPath + name(i),
     keyPrefix: "lo-",
-    ahead: T === "full" ? 64 : T === "mid" ? 44 : 28,
+    ahead: T === "full" ? 36 : T === "mid" ? 28 : 18,
     behind: T === "full" ? 18 : 12,
     limit: T === "lite" ? 2 : 4,
   });
@@ -386,19 +364,15 @@ const frames = (() => {
     count: N,
     url: (i) => CFG.frames.hiPath + name(i),
     keyPrefix: "hi-",
-    ahead: T === "full" ? 24 : 12,
-    behind: T === "full" ? 10 : 5,
-    limit: T === "full" ? 4 : 3,
+    ahead: 2,
+    behind: 1,
+    limit: 1,
   }) : null;
-  const GATE = Math.min(T === "lite" ? 24 : IS_TOUCH ? 40 : 50, N);
+  const GATE = Math.min(T === "lite" ? 8 : IS_TOUCH ? 16 : 24, N);
   const GATE_LIMIT = T === "lite" ? 2 : 5;
 
   /* Entry gate: robust retrying preload of the opening stretch. */
   const preloadLo = (onProgress) => new Promise((resolve, reject) => {
-    if (FULLBUFFER) {                    // decode all frames behind the seal screen
-      loRing.prebufferAll(onProgress, resolve);
-      return;
-    }
     if (!GATE) { resolve(); return; }
     let next = 0, readyCount = 0, inFlight = 0, finished = false;
     const attempts = new Uint8Array(GATE);
@@ -437,18 +411,26 @@ const frames = (() => {
     pumpGate();
   });
 
+  let demandActive = true, hiCalm = false;
+  if (hiRing) hiRing.setRetained(false);
   return {
     N,
+    revision: () => loRing.revision() + (hiRing ? hiRing.revision() : 0),
     preloadLo,
     startLo: () => {
       loRing.start();
-      if (hiRing) setTimeout(() => hiRing.start(), 1200);
+
     },
     startHi: () => { if (hiRing) hiRing.start(); },
-    setHiCalm: () => {},                  // uniform quality: hi streams continuously
+    setHiCalm: (next) => {
+      if (next === hiCalm) return;
+      hiCalm = next;
+      if (hiRing) hiRing.setRetained(next && demandActive);
+    },
     setDemandActive: (next) => {
+      demandActive = next;
       loRing.setRetained(next);
-      if (hiRing) hiRing.setRetained(next);
+      if (hiRing) hiRing.setRetained(next && hiCalm);
     },
     setPlayhead: (i) => {
       const c = clamp(Math.round(i), 0, N - 1);
@@ -564,10 +546,12 @@ const scrub = (() => {
     const iA = Math.min(Math.floor(cur), frames.N - 1);
     const frac = cur - iA;
     frames.setPlayhead(Math.round(cur));
+    settledFrames = vel < 0.1 ? settledFrames + dt : 0;
+    frames.setHiCalm(settledFrames > 0.18);
     // crisp hi-res frame fades in the moment motion calms, melts away on movement
     hiFade = clamp(hiFade + (vel < 0.35 ? dt * 3.2 : -dt * 7), 0, 1);
     const hi = hiFade > 0.02 ? frames.getHi(Math.round(cur)) : null;
-    const key = iA + ":" + ((frac * 24) | 0) + ":" + (hi ? ((hiFade * 12) | 0) : -1);
+    const key = iA + ":" + ((frac * 24) | 0) + ":" + (hi ? ((hiFade * 24) | 0) : -1) + ":" + frames.revision();
     if (key !== drawn && drawBlend(iA, frac, hi, hiFade)) drawn = key;
     return vel;
   };
@@ -634,10 +618,10 @@ const petals = (() => {
   const step = (dt) => {
     if (!running) return;
     paintAcc += dt;
-    const interval = 1 / (lowPerf ? 18 : IS_TOUCH ? 24 : 30);
+    const interval = 1 / (lowPerf ? 30 : 60);
     if (paintAcc < interval) return;
     dt = Math.min(paintAcc, 0.06);
-    paintAcc = 0;
+    paintAcc %= interval;
     c.clearRect(0, 0, canvas.width, canvas.height);
     const n = baseCount();
     if (list.length < n && Math.random() < 0.1) spawn();
@@ -948,13 +932,6 @@ const sanctum = (() => {
     sec.classList.add("loading");
     veilText.textContent = "Unfolding…";
     progressEl.classList.remove("hidden");
-    if (FULLBUFFER) {                    // hold the whole hidden film in hand
-      ring.prebufferAll(
-        (f) => { progressEl.textContent = Math.round(f * 100) + "%"; },
-        unlock
-      );
-      return;
-    }
     let done = 0, next = 0, inFlight = 0;
     const pump = () => {
       while (inFlight < 4 && next < gateCount) {
@@ -1038,7 +1015,7 @@ const sanctum = (() => {
     }
     const iA = Math.min(Math.floor(cur), S.count - 1);
     const frac = cur - iA;
-    const key = "s:" + iA + ":" + ((frac * 24) | 0);
+    const key = "s:" + iA + ":" + ((frac * 24) | 0) + ":" + ring.revision();
     if (key !== drawn && drawPair(iA, frac)) drawn = key;
     if (i !== progressFrame) {
       progressFrame = i;
@@ -1464,8 +1441,13 @@ const refreshPageMetrics = () => {
 if ("ResizeObserver" in window) new ResizeObserver(refreshPageMetrics).observe(document.body);
 addEventListener("load", refreshPageMetrics, { once: true });
 let lastT = performance.now(), fpsAcc = 0, fpsN = 0, degraded = false, lastSp = -1;
+let loopStarted = false, loopPending = false;
+const scheduleLoop = () => { if (!loopPending) { loopPending = true; RAF(mainLoop); } };
 const mainLoop = (t) => {
-  const dt = Math.min((t - lastT) / 1000, 0.05);
+  loopPending = false;
+  if (document.hidden) return;
+  const elapsed = (t - lastT) / 1000;
+  const dt = Math.min(elapsed, 0.05);
   lastT = t;
   const vel = scrub.tick(dt) || 0;
   petals.addGust(Math.min(vel * 0.004, 0.4));
@@ -1482,13 +1464,17 @@ const mainLoop = (t) => {
     lastSp = sp;
   }
   // fps monitor
-  fpsAcc += dt; fpsN++;
+  fpsAcc += elapsed; fpsN++;
   if (fpsAcc > 2 && !degraded) {
     if (fpsN / fpsAcc < 44) { degraded = true; petals.setLowPerf(); }
     fpsAcc = 0; fpsN = 0;
   }
-  RAF(mainLoop);
+  scheduleLoop();
 };
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && loopStarted) { lastT = performance.now(); scheduleLoop(); }
+});
 
 /* ═══════════════ BOOT — the seal opens ═══════════════════ */
 (() => {
@@ -1557,7 +1543,8 @@ const mainLoop = (t) => {
       $("#sound-toggle").classList.remove("hidden");
       $("#thread").classList.add("on");
       lastT = performance.now();
-      RAF(mainLoop);
+      loopStarted = true;
+      scheduleLoop();
       frames.startHi();
       // Let the opening frame runway and soundtrack settle before ambient petals begin.
       setTimeout(() => petals.start(), IS_TOUCH ? 3500 : 2500);
