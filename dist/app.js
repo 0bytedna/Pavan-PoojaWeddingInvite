@@ -62,8 +62,9 @@ window.addEventListener("orientationchange", () => {
 /* ═══════════════ AUDIO — synthesized temple sounds ═══════ */
 const audio = (() => {
   let ctx = null, master = null, bgm = null, noiseBuf = null;
+  // Every visit begins with sound enabled. A visitor can still turn it off
+  // during their visit, but an old mute choice must not silence the invite.
   let muted = false;
-  try { muted = localStorage.getItem("wed-muted") === "1"; } catch {}
   let bgmFadeToken = 0;
 
   const init = () => {
@@ -78,9 +79,13 @@ const audio = (() => {
     for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
   };
 
-  /* Background score — the real instrument, started inside the tap gesture */
+  /* Background score — attempt autoplay, then retry from the first gesture when needed. */
   const startBgm = () => {
-    if (bgm) return;
+    if (bgm) {
+      bgm.muted = muted;
+      if (!muted) bgm.play().then(() => fadeBgmTo(0.32, 700)).catch(() => {});
+      return;
+    }
     bgm = new Audio("assets/audio/vaaroon-forever.mp3?v=1");
     bgm.preload = "metadata";
     bgm.loop = true;
@@ -173,7 +178,6 @@ const audio = (() => {
 
   const toggleMute = () => {
     muted = !muted;
-    try { localStorage.setItem("wed-muted", muted ? "1" : "0"); } catch {}
     if (master) master.gain.linearRampToValueAtTime(muted ? 0 : 1, ctx.currentTime + 0.3);
     if (bgm) bgm.muted = muted;
     return muted;
@@ -1491,6 +1495,9 @@ document.addEventListener("visibilitychange", () => {
 
   scrub.resize();
   petals.resize();
+  // Start immediately where the browser allows it. Browsers that require a
+  // gesture retry when the guest opens the invitation seal below.
+  audio.startBgm();
 
   if (REDUCED) {
     // Reduced motion: static invitation, no film scrub, no petals
@@ -1537,7 +1544,7 @@ document.addEventListener("visibilitychange", () => {
     audio.bell(432, 0.55, 4);                // the seal breaks with a temple bell
     setTimeout(() => audio.bell(648, 0.3, 3), 350);
     audio.whoosh(1);                         // doors part with a breath of air
-    audio.startBgm();                        // the score begins inside the tap gesture
+    audio.startBgm();                        // retries playback inside the tap gesture
     loader.classList.add("open");
     $("#hero").classList.add("entered");     // names cascade in as the doors part
     frames.startLo();
