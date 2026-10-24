@@ -1,0 +1,59 @@
+:root {
+  color-scheme: light;
+  --wine: #6d1a33;
+  --deep-wine: #421020;
+  --gold: #b58a31;
+  --paper: #fffaf0;
+  --ink: #302328;
+  --line: #e5d7bf;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1.125rem/1.65 "Source Sans 3", Arial, sans-serif;
+}
+
+.skip-link { position: absolute; left: -9999px; }
+.skip-link:focus { left: 1rem; top: 1rem; z-index: 2; padding: .7rem 1rem; background: #fff; color: var(--deep-wine); }
+main { max-width: 62rem; margin: 0 auto; padding: 1.25rem; }
+.hero {
+  padding: clamp(3.5rem, 11vw, 7rem) 1.5rem;
+  text-align: center;
+  color: #fffaf0;
+  background: linear-gradient(135deg, var(--deep-wine), var(--wine));
+  border-radius: 0 0 2rem 2rem;
+}
+.sanskrit, .kicker { margin: 0; color: #f2d387; letter-spacing: .11em; text-transform: uppercase; font-size: .9rem; }
+.sanskrit { font: 600 1.05rem/1.4 "Noto Serif Devanagari", serif; letter-spacing: .04em; }
+h1, h2, h3, .footer-names { font-family: "Cormorant Garamond", Georgia, serif; }
+h1 { margin: .6rem 0; font-size: clamp(3.5rem, 12vw, 6.5rem); font-weight: 600; line-height: .9; }
+h1 span { color: #f2d387; }
+.invite-line { max-width: 33rem; margin: 1.5rem auto; font-size: 1.2rem; }
+.date-card { display: grid; gap: .2rem; margin: 2rem auto 0; font-size: 1.05rem; }
+.date-card strong { font-size: 1.35rem; }
+.welcome, .section, .blessing { padding: clamp(2.5rem, 7vw, 4.5rem) 1rem; text-align: center; }
+h2 { margin: .25rem 0 1rem; color: var(--wine); font-size: clamp(2.3rem, 7vw, 3.5rem); line-height: 1; }
+.welcome p { max-width: 40rem; margin: auto; font-size: 1.3rem; }
+.events-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin-top: 2rem; text-align: left; }
+.event-card { padding: 1.5rem; background: #fff; border: 1px solid var(--line); border-radius: 1rem; box-shadow: 0 4px 14px rgba(66, 16, 32, .07); }
+.event-card.featured { border: 2px solid var(--gold); }
+h3 { margin: 0 0 .5rem; color: var(--wine); font-size: 1.85rem; line-height: 1; }
+.event-card p { margin: .45rem 0 0; }
+.event-time { color: var(--deep-wine); font-weight: 700; }
+.venue { border-top: 1px solid var(--line); }
+.venue > p:not(.kicker) { margin: 0 auto 1.5rem; font-size: 1.25rem; }
+.map-button { display: inline-block; padding: .75rem 1.15rem; border-radius: .5rem; background: var(--wine); color: #fff; font-weight: 700; text-decoration: none; }
+.map-button:hover, .map-button:focus { background: var(--deep-wine); }
+.blessing { border-top: 1px solid var(--line); }
+.blessing p { margin: .25rem; }
+.blessing p:first-child { color: var(--wine); font: 600 1.2rem/1.6 "Noto Serif Devanagari", serif; }
+footer { padding: 2.5rem 1rem; text-align: center; color: #fffaf0; background: var(--deep-wine); }
+footer p { margin: .25rem; }
+.footer-names { color: #f2d387; font-size: 2.2rem; }
+footer a { display: inline-block; margin-top: .7rem; color: #fffaf0; }
+@media (max-width: 35rem) { body { font-size: 1.05rem; } main { padding: 0; } .hero { border-radius: 0; } .events-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
