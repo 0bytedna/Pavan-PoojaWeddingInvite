@@ -1324,8 +1324,11 @@ const _cameraBefore = { x: 0, z: 0 };
 const _cameraAfter = { x: 0, z: 0 };
 const _followFromPosition = new THREE.Vector3();
 const _followFromTarget = new THREE.Vector3();
+const _manualFollowFocus = new THREE.Vector3();
+const _manualFollowDelta = new THREE.Vector3();
 let introInterrupted = false;
 let followBlend = 1;
+let manualFollowActive = false;
 
 // One lightweight camera rig creates a complete cinematic sequence without
 // adding cameras, render passes or scene assets. The final angle is the first
@@ -1451,6 +1454,24 @@ function updateDirectedCamera(t, dt) {
     _directCamera.y,
     getSurfaceHeight(_directCamera.x, _directCamera.z) + 2.4
   );
+
+  // A drag may orbit or pan around the procession, but it must never detach
+  // the guest from it. Rebase both the camera and OrbitControls target by the
+  // baraat's movement each frame, preserving the angle the guest chose.
+  if (interacting) {
+    if (manualFollowActive) {
+      _manualFollowDelta.subVectors(_directFocus, _manualFollowFocus);
+      camera.position.add(_manualFollowDelta);
+      controls.target.add(_manualFollowDelta);
+    } else {
+      manualFollowActive = true;
+    }
+    _manualFollowFocus.copy(_directFocus);
+    controls.autoRotate = false;
+    controls.update();
+    return;
+  }
+  manualFollowActive = false;
 
   if (introActive) {
     const e = ease01(t / INTRO_DUR);
@@ -1579,7 +1600,11 @@ function scheduleMobileInteractionTips() {
 
 controls.addEventListener('start', () => {
   interacting = true;
-  releaseCameraFollow();
+  // Orbiting is an alternate angle on the same moving ceremony, never a
+  // request to abandon the moving camera rig.
+  introInterrupted = true;
+  controls.autoRotate = false;
+  idleTimer = 0;
   if (elTitle) elTitle.classList.add('gone');
   if (elHint) elHint.classList.add('gone');
   hideInteractionTip();
@@ -1587,14 +1612,13 @@ controls.addEventListener('start', () => {
 controls.addEventListener('end', () => {
   interacting = false;
   idleTimer = 0;
-  if (IS_MOBILE && !firstOrbitTipShown) {
-    firstOrbitTipShown = true;
-    window.setTimeout(() => {
-      if (!cameraFollowing) {
-        showInteractionTip('Tap Follow baraat to return to the cinematic', 3600);
-      }
-    }, 900);
-  }
+  // Ease from the guest's final orbit angle back to the moving cinematic
+  // framing, rather than leaving the camera behind the baraat.
+  _followFromPosition.copy(camera.position);
+  _followFromTarget.copy(controls.target);
+  followBlend = 0;
+  cameraFollowing = true;
+  manualFollowActive = false;
 });
 
 renderer.domElement.addEventListener('pointerdown', hideInteractionTip, { passive: true });
@@ -1728,8 +1752,8 @@ function animate() {
   // Baraat asset updaters
   for (let i = 0; i < updaters.length; i++) updaters[i](t, dt);
 
-  // The cinematic follows by default; orbit/pinch gestures or desktop keyboard
-  // movement take ownership. The small Follow button restores the directed view.
+  // The cinematic follows continuously. Orbit and pinch adjust the viewing
+  // angle, while keyboard movement deliberately enters free-roam mode.
   if (cameraFollowing) {
     updateDirectedCamera(t, dt);
   } else {
