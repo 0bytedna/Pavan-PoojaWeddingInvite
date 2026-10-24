@@ -1,6 +1,7 @@
 reference/
 .sites-runtime/
 *.tar.gz
+deliverables/
 
 node_modules/
 world-source/dist/
