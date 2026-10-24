@@ -6,82 +6,81 @@
 window.WEDDING_CONFIG = {
 
   couple: {
-    groom: "Mrigank",
-    bride: "Mishi",
-    groomFull: "Mrigank Singh Rathore",
-    brideFull: "Mishi Agarwal",
-    monogram: "M · M",           // shown in the wax seal + header
+    groom: "Pavan",
+    bride: "Pooja",
+    groomFull: "Pavan",
+    brideFull: "Pooja",
+    monogram: "P.P",              // shown in the wax seal + header
     tagline: "Two souls, one sacred fire",
   },
 
   // Main wedding moment — drives the live countdown
   wedding: {
-    dateISO: "2026-11-26T19:08:00+05:30",   // muhurat time
-    dateDisplay: "Thursday, 26 November 2026",
-    muhurat: "Shubh Muhurat · 7:08 PM",
+    dateISO: "2026-11-21T19:15:00+05:30",   // muhurat time
+    dateDisplay: "Saturday, 21 November 2026",
+    muhurat: "Phere / Hast Milap · 7:15 PM",
   },
 
   // The celebrations — rendered in order
   events: [
     {
-      id: "haldi",
-      name: "Haldi",
+      id: "carnival",
+      name: "Carnival",
       icon: "haldi",                    // haldi | sangeet | wedding | reception
-      date: "Tue, 24 Nov 2026",
-      time: "10:00 AM onwards",
-      venue: "Rani Bagh Courtyard",
-      line: "Turmeric, laughter and golden blessings",
+      date: "Friday, 20 Nov 2026",
+      time: "2:00 PM",
+      venue: "Fairfield by Marriott",
+      line: "Colour, laughter and a joyful afternoon together",
       accent: "#D99A2B",
     },
     {
-      id: "sangeet",
-      name: "Sangeet",
+      id: "dj-night",
+      name: "Sangeet / Live Music",
       icon: "sangeet",
-      date: "Tue, 24 Nov 2026",
-      time: "7:00 PM onwards",
-      venue: "Sheesh Mahal Lawns",
-      line: "A night of music, dance and dazzle",
+      date: "Friday, 20 Nov 2026",
+      time: "7:00 PM",
+      venue: "Fairfield by Marriott",
+      line: "Music, dancing and a night to remember",
       accent: "#5B3A8E",
     },
     {
-      id: "wedding",
-      name: "The Wedding",
-      icon: "wedding",
-      date: "Thu, 26 Nov 2026",
-      time: "Baraat 5:30 PM · Pheras 7:08 PM",
-      venue: "The Royal Palace Gardens",
-      line: "Seven vows around the sacred fire",
-      accent: "#7A1F3D",
+      id: "baarat",
+      name: "Baarat",
+      icon: "reception",
+      date: "Saturday, 21 Nov 2026",
+      time: "10:00 AM",
+      venue: "Fairfield by Marriott",
+      line: "Join the joyous procession and the groom’s grand arrival",
+      accent: "#B08A3E",
     },
     {
-      id: "reception",
-      name: "Reception",
-      icon: "reception",
-      date: "Fri, 27 Nov 2026",
-      time: "7:30 PM onwards",
-      venue: "Durbar Hall",
-      line: "An evening of royal festivity",
-      accent: "#B08A3E",
+      id: "varmala",
+      name: "Varmala",
+      icon: "wedding",
+      date: "Saturday, 21 Nov 2026",
+      time: "11:00 AM",
+      venue: "Fairfield by Marriott",
+      line: "A beautiful exchange of garlands and promises",
+      accent: "#D06A78",
+    },
+    {
+      id: "phere",
+      name: "Phere / Hast Milap",
+      icon: "wedding",
+      date: "Saturday, 21 Nov 2026",
+      time: "7:15 PM",
+      venue: "Fairfield by Marriott",
+      line: "Seven sacred vows around the ceremonial fire",
+      accent: "#7A1F3D",
     },
   ],
 
   venue: {
-    name: "The Royal Palace Gardens",
-    address: "Lake Pichola Road, Udaipur, Rajasthan 313001",
+    name: "Fairfield by Marriott",
+    address: "Gogte Plaza, Belagavi - 591113",
     // What gets searched when a guest taps "Open in Maps"
-    mapsQuery: "The Oberoi Udaivilas, Udaipur",
-  },
-
-  rsvp: {
-    // Replace with the couple's real Google Form (use the /viewform link)
-    formUrl: "https://docs.google.com/forms/d/e/1FAIpQLSe_PLACEHOLDER/viewform?embedded=true",
-    deadline: "Please respond by 1 November 2026",
-  },
-
-  // Scratch-card hidden message
-  scratch: {
-    heading: "A little secret, just for you",
-    message: "You hold a special place in our story — join us for a private family dinner on the 25th. Shhh! 🤫",
+    mapsQuery: "Fairfield by Marriott, Gogte Plaza, Belagavi - 591113",
+    mapsUrl: "https://maps.app.goo.gl/xFVpkWu4EctdBw7t5",
   },
 
   // Theme — the royal palette (matches the origami film)

@@ -728,9 +728,11 @@ const petals = (() => {
 
 /* ═══════════════ SCRATCH CARD ════════════════════════════ */
 (() => {
-  $("#scratch-heading").textContent = CFG.scratch.heading;
-  $("#scratch-message").textContent = CFG.scratch.message;
+  const scratchHeading = $("#scratch-heading");
+  if (!scratchHeading) return;
+  scratchHeading.textContent = CFG.scratch.heading;
 
+  $("#scratch-message").textContent = CFG.scratch.message;
   const canvas = $("#scratch-foil"), c = canvas.getContext("2d");
   const wrap = $("#scratch-wrap");
   let painted = false, cleared = false, strokes = 0, foilW = 0, foilH = 0;
@@ -1074,12 +1076,14 @@ const decor = (() => {
 (() => {
   $("#venue-name").textContent = CFG.venue.name;
   $("#venue-address").textContent = CFG.venue.address;
-  const mapsHref = "https://www.google.com/maps/search/?api=1&query=" +
+  const mapsHref = CFG.venue.mapsUrl || "https://www.google.com/maps/search/?api=1&query=" +
     encodeURIComponent(CFG.venue.mapsQuery);
   $("#maps-btn").href = mapsHref;
   const mapLink = $("#map-link");
   if (mapLink) mapLink.href = mapsHref;
-  $("#rsvp-deadline").textContent = CFG.rsvp.deadline;
+  const rsvpDeadline = $("#rsvp-deadline");
+  if (!rsvpDeadline) return;
+  rsvpDeadline.textContent = CFG.rsvp.deadline;
 
   const modal = $("#rsvp-modal"), slot = $("#rsvp-frame-slot");
   const hasRealForm = CFG.rsvp.formUrl && !/PLACEHOLDER/i.test(CFG.rsvp.formUrl);

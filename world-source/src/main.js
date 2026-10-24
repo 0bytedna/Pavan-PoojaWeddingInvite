@@ -25,7 +25,7 @@ import { createWeddingSoundscape } from './wedding/soundscape.js';
 // =====================================================================
 //  Scene director's layout (from the planning pass)
 // =====================================================================
-const COUPLE = { bride: 'Mishi', groom: 'Mrigank' };
+const COUPLE = { bride: 'Pooja', groom: 'Pavan' };
 const WELCOME_PIVOT = [-2, -29];
 const WELCOME_YAW = Math.atan2(8, 2); // final carpet tangent, about 76 degrees
 const WELCOME_FACE = [6, -27];
