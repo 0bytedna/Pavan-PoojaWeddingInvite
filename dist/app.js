@@ -703,7 +703,7 @@ const petals = (() => {
       <span class="event-ico">${ICONS[ev.icon] || ICONS.wedding}</span>
       <h3 class="event-name">${ev.name}</h3>
       <p class="event-line">${ev.line}</p>
-      <p class="event-meta"><b>${ev.date}</b> · ${ev.time}<br>${ev.venue}</p>`;
+      <p class="event-meta"><b>${ev.date}</b> · ${ev.time}</p>`;
     wrap.appendChild(card);
   });
 
