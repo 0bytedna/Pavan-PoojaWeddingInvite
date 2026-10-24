@@ -3,7 +3,7 @@ const soundtrackUrl = import.meta.env.DEV
   : new URL('../assets/audio/vaaroon-forever.mp3', document.baseURI).href;
 
 // The supplied wedding track is the musical heart of the experience. A compact
-// Web Audio layer adds ceremonial percussion, bells, shankh and firecrackers.
+// Web Audio layer adds ceremonial percussion, shankh and firecrackers.
 // The soundtrack is streamed by the browser instead of being decoded into a large
 // in-memory AudioBuffer, which keeps mobile memory use predictable.
 
@@ -38,7 +38,6 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
   let audioMuted = false;
   let pendingArrivalCue = false;
   let pendingArrivalRequestedAt = 0;
-  let blessingPlayed = false;
   let desiredPhase = 'opening';
   let activePhase = '';
   let nextStepTime = 0;
@@ -252,19 +251,6 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
     });
   }
 
-  function scheduleTempleBell(time, frequency = 622.25, gain = 0.028, destination = null) {
-    if (!audioCtx) return;
-    const target = destination || buses.melody;
-    [1, 2.01, 2.72].forEach((ratio, i) => {
-      const oscillator = audioCtx.createOscillator(); oscillator.type = 'sine';
-      oscillator.frequency.value = frequency * ratio;
-      const envelope = audioCtx.createGain();
-      transientEnvelope(envelope.gain, time, gain / Math.pow(i + 1, 1.25), 0.006, 1.45 + i * 0.28);
-      oscillator.connect(envelope); envelope.connect(target);
-      oscillator.start(time); oscillator.stop(time + 2.35);
-    });
-  }
-
   function scheduleShankh(time, duration = 2.25, gain = 0.055) {
     if (!audioCtx || !fxBus) return;
     const fundamental = audioCtx.createOscillator(); fundamental.type = 'triangle';
@@ -324,9 +310,7 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
     // fighting its tempo or melody. If media playback is unavailable, the
     // complete original score below remains as a graceful fallback.
     if (trackPlaying) {
-      if (opening) {
-        if (step === 0 && bar > 0 && bar % 4 === 0) scheduleTempleBell(time, 587.33, 0.018);
-      } else {
+      if (!opening) {
         if (step === 0 || (step === 8 && phase !== 'celebration')) {
           scheduleDrum(time, 132, (phase === 'arrival' ? 0.09 : 0.065) * intensity, true);
         }
@@ -334,7 +318,6 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
         if (travelling && (step === 5 || step === 13)) {
           scheduleHoof(time, phase === 'arrival' ? 0.034 : 0.026, step === 13);
         }
-        if (step === 0 && bar > 0 && bar % 6 === 0) scheduleTempleBell(time, 659.25, 0.016);
       }
       return;
     }
@@ -361,9 +344,6 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
     if (!opening && (step === 3 || step === 11) && bar % 2 === 0) {
       const scaleIndex = WEDDING_PHRASE[(Math.floor(index / 2) + 2) % WEDDING_PHRASE.length];
       scheduleSantoor(time, WEDDING_SCALE[scaleIndex] * 2, phase === 'arrival' ? 0.019 : 0.015);
-    }
-    if (step === 0 && bar > 0 && bar % (opening ? 2 : 4) === 0) {
-      scheduleTempleBell(time, opening ? 587.33 : 659.25, opening ? 0.025 : 0.021);
     }
   }
 
@@ -400,7 +380,6 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
     }
     pendingArrivalCue = false;
     pendingArrivalRequestedAt = 0;
-    blessingPlayed = true;
     const time = audioCtx.currentTime + 0.065;
     duckMusic(time, 3.75);
     scheduleShankh(time, 2.7, 0.074);
@@ -409,8 +388,6 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
     [0, 0.18, 0.36, 0.56, 0.8, 1.08].forEach((offset, i) =>
       scheduleDrum(time + offset, i % 2 ? 215 : 132, 0.125 + i * 0.006, true, fxBus)
     );
-    scheduleTempleBell(time + 0.82, 523.25, 0.052, fxBus);
-    scheduleTempleBell(time + 1.02, 659.25, 0.038, fxBus);
     [
       [1.18, 0.078, -0.7], [1.36, 0.064, 0.62], [1.58, 0.073, -0.18],
       [1.9, 0.061, 0.34], [2.26, 0.069, -0.5], [2.7, 0.058, 0.7],
@@ -459,10 +436,6 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
         else {
           pendingArrivalCue = false;
           pendingArrivalRequestedAt = 0;
-          if (!blessingPlayed && desiredPhase === 'opening') {
-            blessingPlayed = true;
-            scheduleTempleBell(audioCtx.currentTime + 0.1, 587.33, 0.026, fxBus);
-          }
         }
         if (trackPlaying) unlockEvents.forEach((name) => window.removeEventListener(name, unlockAudio));
         return true;

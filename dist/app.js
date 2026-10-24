@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
    ROYAL WEDDING INVITE — ENGINE
    Frame-scrub cinema · petals · scratch card
-   synth bells · countdown · RSVP · 3D-world portal
+   background score · countdown · RSVP · 3D-world portal
    ═══════════════════════════════════════════════════════════ */
 (() => {
 "use strict";
@@ -59,7 +59,7 @@ window.addEventListener("orientationchange", () => {
   rzTimer = setTimeout(remeasure, 350);
 });
 
-/* ═══════════════ AUDIO — synthesized temple sounds ═══════ */
+/* ═══════════════ AUDIO — background score and subtle effects ═══════ */
 const audio = (() => {
   let ctx = null, master = null, bgm = null, noiseBuf = null;
   // Every visit begins with sound enabled. A visitor can still turn it off
@@ -148,34 +148,6 @@ const audio = (() => {
     src.start(t); src.stop(t + 0.09);
   };
 
-  /* Temple bell — inharmonic partials + strike noise */
-  const bell = (base = 432, vol = 0.5, dur = 3.2) => {
-    if (!ctx || muted) return;
-    const now = ctx.currentTime;
-    const partials = [[1, 1], [2.74, 0.45], [5.4, 0.22], [8.93, 0.09]];
-    partials.forEach(([ratio, g]) => {
-      const o = ctx.createOscillator(), gn = ctx.createGain();
-      o.type = "sine";
-      o.frequency.value = base * ratio;
-      o.detune.value = (Math.random() - 0.5) * 6;
-      gn.gain.setValueAtTime(vol * g * 0.32, now);
-      gn.gain.exponentialRampToValueAtTime(0.0001, now + dur * (1 - ratio * 0.06));
-      o.connect(gn).connect(master);
-      o.start(now); o.stop(now + dur);
-    });
-    // strike transient
-    const nb = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
-    const d = nb.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
-    const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g2 = ctx.createGain();
-    src.buffer = nb; f.type = "bandpass"; f.frequency.value = base * 2.7; f.Q.value = 2;
-    g2.gain.value = vol * 0.25;
-    src.connect(f).connect(g2).connect(master);
-    src.start(now);
-  };
-
-  const chime = () => bell(864, 0.22, 1.6);
-
   const toggleMute = () => {
     muted = !muted;
     if (master) master.gain.linearRampToValueAtTime(muted ? 0 : 1, ctx.currentTime + 0.3);
@@ -223,7 +195,7 @@ const audio = (() => {
   });
 
   return {
-    init, bell, chime, startBgm, whoosh, scratchNoise, toggleMute,
+    init, startBgm, whoosh, scratchNoise, toggleMute,
     fadeForWorld, pauseForWorld, restoreAfterWorld, isMuted: () => muted,
     hasBgm: () => !!bgm,
   };
@@ -715,10 +687,8 @@ const petals = (() => {
     wrap.appendChild(card);
   });
 
-  let chimed = 0;
   const show = (el, stagger) => setTimeout(() => {
     el.classList.add("shown");
-    if (chimed++ < 4) audio.chime();
   }, 120 * stagger);
   if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver((entries) => {
@@ -862,10 +832,7 @@ const petals = (() => {
     cleared = true;
     canvas.classList.add("cleared");
     wrap.classList.add("celebrate");
-    // a small ceremony: three rising bells + petal fountain + shimmer flash
-    audio.bell(520, 0.5, 2.6);
-    setTimeout(() => audio.bell(660, 0.42, 2.4), 260);
-    setTimeout(() => audio.bell(880, 0.36, 3.0), 540);
+    // A quiet petal fountain and shimmer flash complete the reveal.
     if (navigator.vibrate) navigator.vibrate([30, 80, 30, 80, 60]);
     const r = wrap.getBoundingClientRect();
     petals.burst(r.left + r.width / 2, r.top + r.height / 3, IS_TOUCH ? 8 : 12);
@@ -1055,7 +1022,6 @@ const sanctum = (() => {
     if (drawPair(0, 0)) drawn = "s:0:0";
     sec.classList.remove("loading");
     sec.classList.add("unlocked");
-    audio.bell(560, 0.5, 3.4);
     if (navigator.vibrate) navigator.vibrate([20, 60, 30]);
     setTimeout(() => {
       const r = sec.querySelector("#sanctum-portal").getBoundingClientRect();
@@ -1197,8 +1163,6 @@ const decor = (() => {
       try { localStorage.setItem("wed-rsvp", JSON.stringify({ ...data, at: new Date().toISOString() })); } catch {}
       e.target.classList.add("hidden");
       slot.querySelector("#rsvp-done").classList.remove("hidden");
-      audio.bell(660, 0.45, 2.6);
-      setTimeout(() => audio.bell(880, 0.32, 2.4), 300);
       if (navigator.vibrate) navigator.vibrate([25, 60, 40]);
       const r = modal.querySelector(".modal-sheet").getBoundingClientRect();
       petals.burst(r.left + r.width / 2, r.top + 80, IS_TOUCH ? 7 : 10);
@@ -1210,7 +1174,6 @@ const decor = (() => {
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
-    audio.chime();
     requestAnimationFrame(() => (slot.querySelector("input, select, textarea, button") || $("#rsvp-close")).focus());
   });
   const close = () => {
@@ -1242,7 +1205,6 @@ const finale = (() => {
     if (done || !el) return;
     done = true;
     el.classList.add("shown");
-    audio.chime();
   };
   let tick = () => {};
   if (el && "IntersectionObserver" in window) {
@@ -1315,7 +1277,6 @@ const finale = (() => {
     document.body.setAttribute("aria-busy", "true");
     link.setAttribute("aria-disabled", "true");
 
-    audio.bell(540, 0.22, 1.3);
     audio.whoosh(0.9);
     audio.fadeForWorld(360);
     document.querySelectorAll("video").forEach((video) => video.pause());
@@ -1398,12 +1359,10 @@ const films = (() => {
       audio.init();
       if (audio.isMuted()) b.classList.toggle("muted", audio.toggleMute());
       audio.startBgm();
-      if (!audio.isMuted()) audio.chime();
       return;
     }
     audio.init();
     b.classList.toggle("muted", audio.toggleMute());
-    if (!audio.isMuted()) audio.chime();
   });
 })();
 
@@ -1606,8 +1565,6 @@ document.addEventListener("visibilitychange", () => {
 
   sealBtn.addEventListener("click", () => {
     audio.init();
-    audio.bell(432, 0.55, 4);                // the seal breaks with a temple bell
-    setTimeout(() => audio.bell(648, 0.3, 3), 350);
     audio.whoosh(1);                         // doors part with a breath of air
     audio.startBgm();                        // retries playback inside the tap gesture
     loader.classList.add("open");
