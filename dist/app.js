@@ -242,9 +242,10 @@ const HAS_CIB = typeof createImageBitmap === "function";
 const createBitmapRing = ({ count, url, keyPrefix, ahead, behind, limit }) => {
   const slot = new Array(count);
   const st = new Uint8Array(count);      // 0 none · 1 loading · 2 ready · 3 failed
-  let center = 0, dir = 1, active = 0, streaming = false, retained = true, revision = 0;
+  let center = 0, dir = 1, active = 0, streaming = false, retained = true, keepAll = false, revision = 0;
 
   const evict = () => {
+    if (keepAll) return;
     const ka = retained ? ahead + 6 : 2;
     const kb = retained ? behind + 6 : 2;
     const lo = dir >= 0 ? center - kb : center - ka;
@@ -311,6 +312,7 @@ const createBitmapRing = ({ count, url, keyPrefix, ahead, behind, limit }) => {
     revision: () => revision,
     reset: (i) => { if (st[i] === 3) st[i] = 0; },
     start: () => { if (!streaming) { streaming = true; pump(); } },
+    keepAll: (next) => { keepAll = next; if (!next) evict(); },
     setRetained: (next) => { retained = next; if (next) pump(); else evict(); },
     setCenter: (i) => {
       const c = clamp(i, 0, count - 1);
@@ -348,7 +350,8 @@ const RING_TIER = (() => {
   return mem < 4 ? "mid" : "full";
 })();
 
-/* Keep decoded films bounded on every device, including high-memory desktops. */
+/* High-resolution frames stream on demand; the opening sequence keeps every
+   low-resolution scroll frame ready before the invitation can be opened. */
 const INTERP = RING_TIER !== "lite";
 
 const frames = (() => {
@@ -372,19 +375,20 @@ const frames = (() => {
     behind: 1,
     limit: 1,
   }) : null;
-  const GATE = Math.min(T === "lite" ? 8 : IS_TOUCH ? 16 : 24, N);
-  const GATE_LIMIT = T === "lite" ? 2 : 5;
+  const PRELOAD_LIMIT = T === "lite" ? 3 : 6;
 
-  /* Entry gate: robust retrying preload of the opening stretch. */
-  const preloadLo = (onProgress) => new Promise((resolve, reject) => {
-    if (!GATE) { resolve(); return; }
+  /* The seal is the loading gate: prepare the complete scroll sequence here,
+     then retain it while the guest moves through the hero. */
+  const preloadAllLo = (onProgress) => new Promise((resolve, reject) => {
+    if (!N) { resolve(); return; }
+    loRing.keepAll(true);
     let next = 0, readyCount = 0, inFlight = 0, finished = false;
-    const attempts = new Uint8Array(GATE);
+    const attempts = new Uint8Array(N);
     const retryQueue = [];
     const MAX_ATTEMPTS = 5;
-    const pumpGate = () => {
+    const pumpPreload = () => {
       if (finished) return;
-      while (!finished && inFlight < GATE_LIMIT && (retryQueue.length || next < GATE)) {
+      while (!finished && inFlight < PRELOAD_LIMIT && (retryQueue.length || next < N)) {
         const idx = retryQueue.length ? retryQueue.shift() : next++;
         loRing.reset(idx);
         attempts[idx]++;
@@ -394,8 +398,8 @@ const frames = (() => {
           if (finished) return;
           if (ok) {
             readyCount++;
-            onProgress(readyCount / GATE);
-            if (readyCount === GATE) { finished = true; resolve(); return; }
+            onProgress(readyCount / N);
+            if (readyCount === N) { finished = true; resolve(); return; }
           } else if (attempts[idx] >= MAX_ATTEMPTS) {
             finished = true;
             reject(new Error("Opening frame " + (idx + 1) + " could not be prepared"));
@@ -404,15 +408,15 @@ const frames = (() => {
             setTimeout(() => {
               if (finished) return;
               retryQueue.push(idx);
-              pumpGate();
+              pumpPreload();
             }, Math.min(3200, 350 * Math.pow(1.8, attempts[idx])));
           }
-          pumpGate();
+          pumpPreload();
         });
         if (!started) inFlight--;
       }
     };
-    pumpGate();
+    pumpPreload();
   });
 
   let demandActive = true, hiCalm = false;
@@ -420,7 +424,7 @@ const frames = (() => {
   return {
     N,
     revision: () => loRing.revision() + (hiRing ? hiRing.revision() : 0),
-    preloadLo,
+    preloadAllLo,
     startLo: () => {
       loRing.start();
 
@@ -1514,10 +1518,10 @@ document.addEventListener("visibilitychange", () => {
   const ringPetals = [...document.querySelectorAll("#petal-ring path")];
   ringPetals.forEach((p) => { p.style.opacity = .18; p.style.transition = "opacity .6s ease"; });
   const slowNotice = setTimeout(() => {
-    copyEl.textContent = "Smoothing every frame…";
+    copyEl.textContent = "Preparing every frame…";
   }, 12000);
   retryEl.addEventListener("click", () => location.reload(), { once: true });
-  frames.preloadLo((f) => {
+  frames.preloadAllLo((f) => {
     pctEl.textContent = Math.round(f * 100) + "%";
     ring.style.strokeDashoffset = CIRC * (1 - f);
     // the mandala blooms petal by petal as the world loads
@@ -1529,9 +1533,7 @@ document.addEventListener("visibilitychange", () => {
     statusEl.classList.add("hidden");
     tapEl.classList.remove("hidden");
     sealBtn.disabled = false;
-    // Use the natural pause before the seal tap to decode the opening runway.
-    // The queue remains bounded, so this adds readiness rather than a bulk preload.
-    if (!SAVE_DATA) frames.startLo();
+    // Every low-resolution hero frame is decoded and retained before the seal opens.
   }).catch(() => {
     clearTimeout(slowNotice);
     copyEl.textContent = "Preparation paused";
