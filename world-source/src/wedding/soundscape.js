@@ -1,8 +1,8 @@
 const pianoTrackUrl = import.meta.env.DEV
-  ? '/src/assets/audio/world-piano.m4a'
-  : new URL('../assets/audio/world-piano.m4a', document.baseURI).href;
+  ? '/src/assets/audio/vaaroon-forever.mp3'
+  : new URL('../assets/audio/vaaroon-forever.mp3', document.baseURI).href;
 
-// The supplied piano cover is the musical heart of the experience. A compact
+// The supplied wedding track is the musical heart of the experience. A compact
 // Web Audio layer adds ceremonial percussion, bells, shankh and firecrackers.
 // The piano is streamed by the browser instead of being decoded into a large
 // in-memory AudioBuffer, which keeps mobile memory use predictable.

@@ -81,7 +81,7 @@ const audio = (() => {
   /* Background score — the real instrument, started inside the tap gesture */
   const startBgm = () => {
     if (bgm) return;
-    bgm = new Audio("assets/audio/bgm.m4a");
+    bgm = new Audio("assets/audio/vaaroon-forever.mp3?v=1");
     bgm.preload = "metadata";
     bgm.loop = true;
     bgm.playsInline = true;
