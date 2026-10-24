@@ -916,7 +916,7 @@ const sanctum = (() => {
     limit: RING_TIER === "lite" ? 2 : 4,
   });
   const gateCount = Math.min(SAVE_DATA ? 6 : IS_TOUCH ? 10 : 16, S.count);
-  let state = "locked";            // locked → loading → unlocked
+  let state = "locked";            // locked → loading/preloading → preloaded → unlocked
   let inView = false, cur = 0, target = 0, drawn = "";
   let scrollStart = 0, scrollDistance = 1, loadCenter = -1, progressFrame = -1;
 
@@ -932,12 +932,15 @@ const sanctum = (() => {
       if (e.isIntersecting) {
         measureScrollRange(e.boundingClientRect);
         if (state === "locked") load();   // everyone gets the moment
+        else if (state === "preloaded") unlock();
         else if (state === "unlocked") ring.setRetained(true);
       } else if (state === "unlocked") ring.setRetained(false);
     });
   }, { rootMargin: SAVE_DATA ? "240px 0px" : IS_TOUCH ? "520px 0px" : "700px 0px" }).observe(sec);
 
   const load = () => {
+    if (state === "preloaded") { unlock(); return; }
+    if (state !== "locked") return;
     state = "loading";
     sec.classList.add("loading");
     veilText.textContent = "Unfolding…";
@@ -958,6 +961,57 @@ const sanctum = (() => {
     };
     pump();
   };
+
+  /* The seal also prepares this complete film. Its own section stays veiled
+     until it enters view, but scrolling through it never has to fetch frames. */
+  const preloadAll = (onProgress) => new Promise((resolve, reject) => {
+    if (state === "preloaded" || state === "unlocked") { onProgress(1); resolve(); return; }
+    if (state !== "locked") { reject(new Error("Hidden moment is already preparing")); return; }
+    state = "preloading";
+    ring.keepAll(true);
+    let next = 0, ready = 0, inFlight = 0, finished = false;
+    const attempts = new Uint8Array(S.count);
+    const retryQueue = [];
+    const MAX_ATTEMPTS = 5;
+    const pump = () => {
+      if (finished) return;
+      while (!finished && inFlight < 4 && (retryQueue.length || next < S.count)) {
+        const idx = retryQueue.length ? retryQueue.shift() : next++;
+        ring.reset(idx);
+        attempts[idx]++;
+        inFlight++;
+        const started = ring.load(idx, (ok) => {
+          inFlight--;
+          if (finished) return;
+          if (ok) {
+            ready++;
+            onProgress(ready / S.count);
+            if (ready === S.count) {
+              finished = true;
+              state = "preloaded";
+              if (inView) unlock();
+              resolve();
+              return;
+            }
+          } else if (attempts[idx] >= MAX_ATTEMPTS) {
+            finished = true;
+            state = "locked";
+            reject(new Error("Hidden moment frame " + (idx + 1) + " could not be prepared"));
+            return;
+          } else {
+            setTimeout(() => {
+              if (finished) return;
+              retryQueue.push(idx);
+              pump();
+            }, Math.min(3200, 350 * Math.pow(1.8, attempts[idx])));
+          }
+          pump();
+        });
+        if (!started) inFlight--;
+      }
+    };
+    pump();
+  });
 
   const resize = () => {
     measureScrollRange();
@@ -1036,6 +1090,8 @@ const sanctum = (() => {
 
   return {
     tick,
+    count: S.count,
+    preloadAll,
     resize: () => { if (state === "unlocked") resize(); else if (inView) measureScrollRange(); },
   };
 })();
@@ -1521,13 +1577,20 @@ document.addEventListener("visibilitychange", () => {
     copyEl.textContent = "Preparing every frame…";
   }, 12000);
   retryEl.addEventListener("click", () => location.reload(), { once: true });
-  frames.preloadAllLo((f) => {
+  let heroProgress = 0, hiddenProgress = 0;
+  const updateLoadProgress = () => {
+    const total = frames.N + sanctum.count;
+    const f = (heroProgress * frames.N + hiddenProgress * sanctum.count) / total;
     pctEl.textContent = Math.round(f * 100) + "%";
     ring.style.strokeDashoffset = CIRC * (1 - f);
     // the mandala blooms petal by petal as the world loads
     const lit = Math.round(f * ringPetals.length);
     for (let k = 0; k < lit; k++) ringPetals[k].style.opacity = 1;
-  }).then(() => {
+  };
+  Promise.all([
+    frames.preloadAllLo((f) => { heroProgress = f; updateLoadProgress(); }),
+    sanctum.preloadAll((f) => { hiddenProgress = f; updateLoadProgress(); }),
+  ]).then(() => {
     clearTimeout(slowNotice);
     try { scrub.firstPaint(); } catch { /* paint must never block entry */ }
     statusEl.classList.add("hidden");
