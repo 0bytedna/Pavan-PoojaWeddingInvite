@@ -1637,7 +1637,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // =====================================================================
-//  Piano-led ceremonial soundscape with lightweight synthesized wedding cues
+//  Streamed wedding soundtrack with lightweight synthesized ceremonial cues
 // =====================================================================
 const weddingSoundscape = createWeddingSoundscape({
   button: document.getElementById('soundBtn'),

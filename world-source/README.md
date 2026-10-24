@@ -12,7 +12,7 @@ browser, desktop or mobile.
 - Distance-driven articulated walking gives the horse, elephant, attendants, dancers and procession guests synchronized leg, hoof and foot motion; the welcome mandap, bride, arch and decor are aligned to the carpet approach.
 - A wide **burgundy-and-gold ceremonial carpet** path, toran gates, floral arches, lamp-pillars, brass diyas, hanging marigold/jasmine garlands, warm lanterns.
 - Cinematic golden-hour light, volumetric god-rays, gentle fog, and floating flower petals — over the preserved natural landscape (trees, mountains, lake, birds, butterflies).
-- The supplied **Ishq Sufiyana piano cover** plays as the continuous musical bed, web-optimized and circularly crossfaded for a clean loop. Lightweight dholak, manjira, hoof accents, temple bells, shankh and arrival firecrackers are mixed around it with automatic music ducking.
+- The supplied wedding soundtrack plays as the continuous musical bed. Lightweight dholak, manjira, hoof accents, temple bells, shankh and arrival firecrackers are mixed around it with automatic music ducking.
 
 ## Run it locally
 ```bash
@@ -26,9 +26,9 @@ npm run dev        # opens a live dev server (default http://localhost:5173)
 ```bash
 npm run build:single
 ```
-Produces **`dist-single/index.html`** — a single self-contained file (~5.8 MB) with
-everything (including Three.js and the piano track) inlined. Send that one file; the recipient just
-double-clicks it to open in their browser. No internet or install required.
+Produces **`dist-single/index.html`** — a single self-contained scene file. Send it together with
+the invitation's `assets/audio/vaaroon-forever.mp3` track; the recipient can then open it in their
+browser without a build step.
 
 ### 2. Host it as a website (best experience — a shareable link)
 ```bash
@@ -47,14 +47,14 @@ npm run preview:single   # serves dist-single/
 ## Controls
 - **Desktop:** drag to orbit, scroll to zoom, right-drag to pan, and use **W A S D / arrows** to fly.
 - **Phone:** drag with one finger to orbit, pinch to zoom, and use a two-finger drag to pan. A small **Follow Baraat** button appears only after you take control—there is no joystick or button grid.
-- The camera follows the baraat by default; any navigation input takes over immediately.
-- Tap the speaker button (or interact with the world) to start / mute the piano-led wedding soundscape. Browsers require one interaction before audible playback can begin.
+- The camera follows the baraat by default and remains attached to the procession while you orbit or pan.
+- Tap the speaker button to mute or restore the wedding soundtrack. Browsers that block audible autoplay start it with the first interaction.
 
 ## Project layout
 ```
 index.html            page shell + title / loading overlay
 src/main.js           scene assembly: landscape, atmosphere, asset placement, camera
-src/assets/audio/     optimized looping piano cover used by the soundscape
+src/assets/audio/     local development copy of the wedding soundtrack
 src/wedding/          the baraat assets (each a self-contained module)
   shared.js           the royal color palette
   mandap.js  arches.js  horseGroom.js  bride.js  elephant.js
@@ -67,10 +67,8 @@ Low-poly stylized assets, instanced foliage & petals, a tight light budget, and
 automatic mobile tuning (reduced pixel ratio, shadow resolution, grass and petal
 counts) keep it light enough to render smoothly on phones. The procession reuses
 the existing characters and particles with transform animation only—no extra
-models, image files, dependencies, or draw calls were added. The 5:22 piano cover
-is compressed to about 3.86 MB and streamed through one persistent media element,
+models, image files, dependencies, or draw calls were added. The soundtrack is
+streamed through one persistent media element,
 avoiding the roughly 100 MB memory cost of decoding it into an AudioBuffer. Mobile
 devices also use gesture-first controls, lower landscape shadow cost, cached
 terrain sampling, stable time-based animation, and sparse procedural audio layers.
-
-Before publishing publicly, make sure you have permission to distribute the supplied piano recording.

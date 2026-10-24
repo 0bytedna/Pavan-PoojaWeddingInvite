@@ -1,10 +1,10 @@
-const pianoTrackUrl = import.meta.env.DEV
+const soundtrackUrl = import.meta.env.DEV
   ? '/src/assets/audio/vaaroon-forever.mp3'
   : new URL('../assets/audio/vaaroon-forever.mp3', document.baseURI).href;
 
 // The supplied wedding track is the musical heart of the experience. A compact
 // Web Audio layer adds ceremonial percussion, bells, shankh and firecrackers.
-// The piano is streamed by the browser instead of being decoded into a large
+// The soundtrack is streamed by the browser instead of being decoded into a large
 // in-memory AudioBuffer, which keeps mobile memory use predictable.
 
 const MASTER_VOLUME = 0.48;
@@ -46,9 +46,9 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
   let schedulerId = null;
   let resumePromise = null;
   let resumeGeneration = 0;
-  let pianoTrack = null;
-  let pianoSource = null;
-  let pianoGain = null;
+  let soundtrack = null;
+  let soundtrackSource = null;
+  let soundtrackGain = null;
   let trackPlaying = false;
   let trackFailed = false;
   let pendingTrackTime = Number.isFinite(Number(initialTrackTime)) ? Math.max(0, Number(initialTrackTime)) : null;
@@ -97,14 +97,14 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
     if (!audioCtx || !audioStarted) return;
     activePhase = AUDIO_PROFILES[next] ? next : 'opening';
     const profile = AUDIO_PROFILES[activePhase];
-    const pianoMix = trackPlaying;
-    const rhythmScale = pianoMix
+    const soundtrackMix = trackPlaying;
+    const rhythmScale = soundtrackMix
       ? (activePhase === 'arrival' ? 0.78 : activePhase === 'procession' ? 0.70 : activePhase === 'celebration' ? 0.58 : 0.34)
       : 1;
-    rampParam(pianoGain?.gain, profile.track, seconds, when);
-    rampParam(buses.drone.gain, profile.drone * (pianoMix ? 0.11 : 1), seconds, when);
-    rampParam(buses.air.gain, profile.air * (pianoMix ? 0.82 : 1), seconds, when);
-    rampParam(buses.melody.gain, profile.melody * (pianoMix ? 0.07 : 1), seconds, when);
+    rampParam(soundtrackGain?.gain, profile.track, seconds, when);
+    rampParam(buses.drone.gain, profile.drone * (soundtrackMix ? 0.11 : 1), seconds, when);
+    rampParam(buses.air.gain, profile.air * (soundtrackMix ? 0.82 : 1), seconds, when);
+    rampParam(buses.melody.gain, profile.melody * (soundtrackMix ? 0.07 : 1), seconds, when);
     rampParam(buses.rhythm.gain, profile.rhythm * rhythmScale, seconds, when);
   }
 
@@ -120,20 +120,20 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
   }
 
   function applyInitialTrackTime() {
-    if (!pianoTrack || pendingTrackTime == null || pianoTrack.readyState < 1) return;
+    if (!soundtrack || pendingTrackTime == null || soundtrack.readyState < 1) return;
     try {
-      const duration = Number.isFinite(pianoTrack.duration) && pianoTrack.duration > 0 ? pianoTrack.duration : null;
-      pianoTrack.currentTime = duration ? pendingTrackTime % duration : pendingTrackTime;
+      const duration = Number.isFinite(soundtrack.duration) && soundtrack.duration > 0 ? soundtrack.duration : null;
+      soundtrack.currentTime = duration ? pendingTrackTime % duration : pendingTrackTime;
       pendingTrackTime = null;
     } catch { /* metadata may not be seekable until the next media event */ }
   }
 
-  function playPianoTrack(forceGesture = false) {
-    if (!pianoTrack || trackFailed || audioMuted || document.hidden) return;
+  function playSoundtrack(forceGesture = false) {
+    if (!soundtrack || trackFailed || audioMuted || document.hidden) return;
     applyInitialTrackTime();
-    if (!forceGesture && !pianoTrack.paused) return;
+    if (!forceGesture && !soundtrack.paused) return;
     try {
-      const result = pianoTrack.play();
+      const result = soundtrack.play();
       if (result?.then) {
         result
           .then(() => setTrackPlaying(true))
@@ -144,9 +144,9 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
     }
   }
 
-  function pausePianoTrack() {
-    if (!pianoTrack || pianoTrack.paused) return;
-    try { pianoTrack.pause(); } catch { /* keep the procedural fallback alive */ }
+  function pauseSoundtrack() {
+    if (!soundtrack || soundtrack.paused) return;
+    try { soundtrack.pause(); } catch { /* keep the procedural fallback alive */ }
     setTrackPlaying(false);
   }
 
@@ -480,7 +480,7 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
   function startAudio(forceGesture = false) {
     if (audioCtx) {
       const resume = requestResume(forceGesture);
-      playPianoTrack(forceGesture);
+      playSoundtrack(forceGesture);
       return resume;
     }
     try {
@@ -510,19 +510,19 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
       // Keep one persistent media element/source pair. Recreating a media
       // source is invalid, and decoding this five-minute track into an
       // AudioBuffer would cost roughly 100 MB on a phone.
-      pianoTrack = new Audio();
-      pianoTrack.src = pianoTrackUrl;
-      pianoTrack.preload = 'metadata';
-      pianoTrack.loop = true;
-      pianoTrack.playsInline = true;
-      pianoTrack.setAttribute('playsinline', '');
-      pianoTrack.addEventListener('loadedmetadata', applyInitialTrackTime, { once: true });
-      pianoSource = audioCtx.createMediaElementSource(pianoTrack);
-      pianoGain = audioCtx.createGain(); pianoGain.gain.value = 0.0001;
-      pianoSource.connect(pianoGain); pianoGain.connect(musicBus);
-      pianoTrack.addEventListener('playing', () => setTrackPlaying(true));
-      pianoTrack.addEventListener('pause', () => setTrackPlaying(false));
-      pianoTrack.addEventListener('error', () => {
+      soundtrack = new Audio();
+      soundtrack.src = soundtrackUrl;
+      soundtrack.preload = 'metadata';
+      soundtrack.loop = true;
+      soundtrack.playsInline = true;
+      soundtrack.setAttribute('playsinline', '');
+      soundtrack.addEventListener('loadedmetadata', applyInitialTrackTime, { once: true });
+      soundtrackSource = audioCtx.createMediaElementSource(soundtrack);
+      soundtrackGain = audioCtx.createGain(); soundtrackGain.gain.value = 0.0001;
+      soundtrackSource.connect(soundtrackGain); soundtrackGain.connect(musicBus);
+      soundtrack.addEventListener('playing', () => setTrackPlaying(true));
+      soundtrack.addEventListener('pause', () => setTrackPlaying(false));
+      soundtrack.addEventListener('error', () => {
         trackFailed = true;
         setTrackPlaying(false);
       });
@@ -560,7 +560,7 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
       const resume = requestResume(forceGesture);
       // This call deliberately stays in the original pointer/click stack;
       // mobile browsers otherwise reject it even if AudioContext resumes.
-      playPianoTrack(forceGesture);
+      playSoundtrack(forceGesture);
       return resume;
     } catch {
       audioStarted = false;
@@ -578,10 +578,10 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
     const generation = ++muteGeneration;
     if (!audioMuted) {
       requestResume(true);
-      playPianoTrack(true);
+      playSoundtrack(true);
     } else {
       window.setTimeout(() => {
-        if (audioMuted && generation === muteGeneration) pausePianoTrack();
+        if (audioMuted && generation === muteGeneration) pauseSoundtrack();
       }, 320);
     }
     rampParam(masterGain?.gain, audioMuted ? 0.0001 : MASTER_VOLUME, 0.28);
@@ -591,7 +591,7 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
   function stayMuted() {
     audioMuted = true;
     ++muteGeneration;
-    pausePianoTrack();
+    pauseSoundtrack();
     rampParam(masterGain?.gain, 0.0001, 0.18);
     unlockEvents.forEach((name) => window.removeEventListener(name, unlockAudio));
     setButtonState();
@@ -619,11 +619,11 @@ export function createWeddingSoundscape({ button = null, onStateChange = null, i
   document.addEventListener('visibilitychange', () => {
     if (!audioCtx) return;
     if (document.hidden) {
-      pausePianoTrack();
+      pauseSoundtrack();
       Promise.resolve(audioCtx.suspend?.()).catch(() => {});
     } else if (!audioMuted) {
       requestResume();
-      playPianoTrack();
+      playSoundtrack();
     }
   });
 
