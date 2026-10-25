@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1072" role="img" aria-labelledby="title desc">
+  <title id="title">Map to Fairfield by Marriott Belagavi</title>
+  <desc id="desc">A stylised location map centered on Fairfield by Marriott Belagavi, Gogte Plaza.</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7f0df"/><stop offset="1" stop-color="#e7dbc5"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#4a0f22" flood-opacity=".22"/></filter>
+  </defs>
+  <rect width="1000" height="1072" fill="url(#paper)"/>
+  <path d="M-60 170C180 95 350 250 510 150S830 70 1060 180M-60 610C180 500 300 720 500 610S760 510 1060 640" fill="none" stroke="#d7c8ad" stroke-width="82" opacity=".8"/>
+  <path d="M-20 276C215 190 365 340 560 230S824 200 1020 275M-10 737C160 655 312 795 490 710S798 650 1030 760" fill="none" stroke="#fffaf0" stroke-width="29"/>
+  <g fill="none" stroke="#c5b493" stroke-width="16" opacity=".8">
+    <path d="M115 0L88 1072M292 0L345 1072M494 0L456 1072M700 0L744 1072M887 0L860 1072"/>
+    <path d="M0 100L1000 154M0 400L1000 360M0 850L1000 920"/>
+  </g>
+  <g fill="none" stroke="#fffdf7" stroke-width="6" opacity=".95">
+    <path d="M115 0L88 1072M292 0L345 1072M494 0L456 1072M700 0L744 1072M887 0L860 1072"/>
+    <path d="M0 100L1000 154M0 400L1000 360M0 850L1000 920"/>
+  </g>
+  <path d="M0 545C185 470 405 577 586 470S805 420 1000 485" fill="none" stroke="#9d7b4c" stroke-width="15"/>
+  <path d="M0 545C185 470 405 577 586 470S805 420 1000 485" fill="none" stroke="#fff5d8" stroke-width="5" stroke-dasharray="20 15"/>
+  <g font-family="Georgia, serif" fill="#765d3c" font-size="27" letter-spacing="2" opacity=".85">
+    <text x="90" y="230">BELAGAVI</text><text x="694" y="860">GOGTE PLAZA</text><text x="138" y="688">KARNATAKA</text>
+  </g>
+  <g transform="translate(516 506)" filter="url(#shadow)">
+    <path d="M0-110C-60-110-108-62-108-2c0 78 108 184 108 184S108 76 108-2C108-62 60-110 0-110z" fill="#7a1f3d"/>
+    <circle cy="-2" r="43" fill="#f7e4ae"/><circle cy="-2" r="21" fill="#7a1f3d"/>
+  </g>
+  <g transform="translate(500 808)" text-anchor="middle">
+    <rect x="-361" y="-66" width="722" height="132" rx="28" fill="#fffaf0" stroke="#c9a24b" stroke-width="3"/>
+    <text y="-12" fill="#4a0f22" font-family="Georgia, serif" font-size="34" font-weight="bold">FAIRFIELD BY MARRIOTT BELAGAVI</text>
+    <text y="29" fill="#765d3c" font-family="Georgia, serif" font-size="25">Gogte Plaza · 15.928078° N, 74.528757° E</text>
+  </g>
+  <text x="500" y="1000" text-anchor="middle" fill="#8b714b" font-family="Georgia, serif" font-size="21" letter-spacing="4">YOUR CELEBRATION DESTINATION</text>
+</svg>
