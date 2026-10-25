@@ -4,7 +4,7 @@
   const videos = [...document.querySelectorAll(".film-band video")];
   const portal = document.getElementById("world-portal-link");
   const hero = document.getElementById("hero");
-  let running = false, held = false, inFilm = false, inWorld = false, raf = 0;
+  let running = false, held = false, tourReady = false, inFilm = false, inWorld = false, raf = 0;
   let last = 0;
 
   // One pass is intentional: each film is a small intermission in the tour.
@@ -38,7 +38,10 @@
     return r.bottom > 0 && r.top < innerHeight;
   };
   const stop = () => { running = false; cancelAnimationFrame(raf); };
-  const start = () => { if (!running && !held && !inFilm && !inWorld) { running = true; last = performance.now(); raf = requestAnimationFrame(step); } };
+  const start = () => {
+    if (!tourReady || running || held || inFilm || inWorld) return;
+    running = true; last = performance.now(); raf = requestAnimationFrame(step);
+  };
   const resumeAfterFilm = () => { inFilm = false; setTimeout(start, 650); };
 
   const playFilm = (video) => {
@@ -80,6 +83,7 @@
   addEventListener("pointercancel", release, { passive: true });
 
   waitForOpen().then(waitForLoader).then(() => {
+    tourReady = true;
     if (returning) {
       window.scrollTo({ top: 0, behavior: "instant" });
       return;
