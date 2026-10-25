@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pavan ♥ Pooja — A Royal Wedding Invitation</title>
+<meta name="description" content="With the blessings of Lord Ganesha, join us for the wedding of Pavan and Pooja — 21 November 2026, Fairfield by Marriott, Belagavi.">
+<meta name="theme-color" content="#4A0F22">
+<base href="../">
+<meta property="og:title" content="Pavan ♥ Pooja — The Wedding Celebration">
+<meta property="og:description" content="You are royally invited. Scroll to open the invitation.">
+<meta property="og:image" content="assets/stills/world.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Noto+Serif+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=20260720-sides">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2232%22 fill=%22%234A0F22%22/%3E%3Ctext x=%2232%22 y=%2244%22 text-anchor=%22middle%22 font-family=%22serif%22 font-size=%2238%22 fill=%22%23C9A24B%22%3EM%3C/text%3E%3C/svg%3E">
+</head>
+<body class="is-loading">
+
+<!-- ═══════════════ THE SEAL (loader / entry) ═══════════════ -->
+<div id="loader" aria-label="Opening invitation">
+  <div class="door door-l"></div>
+  <div class="door door-r"></div>
+  <div class="loader-center">
+    <svg id="mandala" viewBox="-100 -100 200 200" aria-hidden="true">
+      <g id="mandala-spin">
+        <g id="petal-ring"></g>
+        <circle r="58" fill="none" stroke="currentColor" stroke-width=".8" opacity=".7"/>
+        <circle r="52" fill="none" stroke="currentColor" stroke-width=".4" stroke-dasharray="2 3" opacity=".6"/>
+      </g>
+      <circle id="progress-ring" r="66" fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" transform="rotate(-90)"/>
+    </svg>
+    <button id="seal-btn" disabled aria-label="Open the invitation">
+              <span class="seal-monogram">P.P</span>
+      <span class="seal-rim"></span>
+    </button>
+    <p id="loader-status" role="status" aria-live="polite"><span id="loader-copy">Preparing the baraat…</span> <span id="loader-pct">0%</span></p>
+    <button id="loader-retry" class="hidden" type="button">Retry preparation</button>
+    <p id="loader-tap" class="hidden">Tap the seal to open</p>
+  </div>
+</div>
+
+<!-- ═══════════════ AMBIENT PETALS ═══════════════ -->
+<canvas id="petals" aria-hidden="true"></canvas>
+
+<!-- ═══════════════ HERO — THE UNFOLDING ═══════════════ -->
+<section id="hero">
+  <div class="hero-sticky">
+    <canvas id="scrub" aria-hidden="true"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <!-- Wide-screen editorial side notes — decorative and deliberately CSS-only -->
+    <div class="hero-side hero-side-left" aria-hidden="true">
+      <span class="hero-side-role"><b lang="hi">वधू</b><i></i>The Bride</span>
+      <span class="hero-side-name">Pooja</span>
+      <span class="hero-side-rule"></span>
+      <em>Grace in every step</em>
+      <small>21 · XI · 2026</small>
+    </div>
+    <div class="hero-side hero-side-right" aria-hidden="true">
+      <span class="hero-side-role"><b lang="hi">वर</b><i></i>The Groom</span>
+      <span class="hero-side-name">Pavan</span>
+      <span class="hero-side-rule"></span>
+      <em>Joy in every beat</em>
+      <small>Belagavi · Karnataka</small>
+    </div>
+
+    <!-- Crown — a quiet, constant signature above the unfolding world -->
+    <div id="hero-crown" aria-hidden="true">
+      <span class="crown-mono">P.P</span>
+      <span class="crown-rule"></span>
+      <span class="crown-chapter">A Royal Union</span>
+    </div>
+
+    <!-- One permanent message: the imagery moves, the invitation remains serene. -->
+    <div class="beat beat-static">
+      <div class="hero-copy-glass">
+        <p class="eyebrow">॥ शुभ विवाह ॥</p>
+        <h1 class="names"><span class="name-word">Pavan</span> <span class="amp">♥</span> <span class="name-word">Pooja</span></h1>
+        <p class="hero-vow">Two souls · Seven vows · One forever</p>
+        <div class="scroll-hint" aria-hidden="true"><span>Scroll to witness their story</span><i class="chev"></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ THE COUNTDOWN ═══════════════ -->
+<section id="countdown-section" aria-labelledby="countdown-title">
+  <div class="countdown-card">
+    <span class="countdown-sigil" aria-hidden="true">P.P</span>
+    <p class="eyebrow">The sacred day draws near</p>
+    <h2 id="countdown-title">Until forever begins</h2>
+    <p class="countdown-date">Saturday · 21 November 2026</p>
+    <div id="countdown" class="countdown" role="timer" aria-label="Countdown to the wedding">
+      <div class="cd-cell"><span class="cd-num" id="cd-d">–</span><span class="cd-lbl">Days</span></div>
+      <div class="cd-cell"><span class="cd-num" id="cd-h">–</span><span class="cd-lbl">Hours</span></div>
+      <div class="cd-cell"><span class="cd-num" id="cd-m">–</span><span class="cd-lbl">Mins</span></div>
+      <div class="cd-cell"><span class="cd-num" id="cd-s">–</span><span class="cd-lbl">Secs</span></div>
+    </div>
+    <p class="countdown-detail">Phere / Hast Milap · 7:15 PM · Belagavi</p>
+  </div>
+</section>
+
+<!-- ═══════════════ THE CELEBRATIONS ═══════════════ -->
+<section id="events">
+  <img loading="lazy" class="decor decor-toran" src="assets/decor/toran.webp" alt="" aria-hidden="true">
+  <img loading="lazy" class="decor decor-elephant" data-depth="0.22" src="assets/decor/elephant.webp" alt="" aria-hidden="true">
+  <img loading="lazy" class="decor decor-umbrella" data-depth="0.38" src="assets/decor/umbrella.webp" alt="" aria-hidden="true">
+  <header class="sec-head">
+    <p class="eyebrow">Two days of festivity</p>
+    <h2 class="sec-title gold-foil">The Celebrations</h2>
+  </header>
+  <div id="event-cards"></div>
+</section>
+
+<!-- ═══════════════ FILM BAND 1 ═══════════════ -->
+<div class="film-band"><div class="film-inner"><video muted loop playsinline preload="none" data-poster="assets/film/film1_poster.webp" data-src="assets/film/film1.mp4?v=pavan-pooja-vfx" aria-label="Pavan and Pooja wedding film"></video><p class="film-caption"><span class="film-eyebrow">Pavan &amp; Pooja</span><span class="film-line">Every love story deserves cinema</span></p></div></div>
+
+<!-- ═══════════════ THE HIDDEN MOMENT (scroll-driven) ═══════════════ -->
+<section id="sanctum">
+  <div id="sanctum-stage">
+    <header class="sec-head">
+      <p class="eyebrow" id="sanctum-eyebrow">A sacred moment awaits</p>
+      <h2 class="sec-title gold-foil" id="sanctum-heading">The Hidden Moment</h2>
+      <p class="sec-sub" id="sanctum-hint"></p>
+    </header>
+    <div id="sanctum-portal">
+      <div id="sanctum-view">
+        <canvas id="sanctum-canvas" aria-hidden="true"></canvas>
+        <img loading="lazy" id="sanctum-poster" src="assets/stills/sanctum_start.webp" alt="A hidden origami moment, veiled">
+        <div id="sanctum-veil">
+          <span class="veil-lotus">🪷</span>
+          <span class="veil-text" id="sanctum-veil-text"></span>
+          <span class="veil-progress hidden" id="sanctum-progress"></span>
+        </div>
+      </div>
+      <img loading="lazy" class="sanctum-arch" src="assets/decor/arch.webp" alt="" aria-hidden="true">
+    </div>
+    <div id="sanctum-filmbar" aria-hidden="true">
+      <span class="bar"><span class="fill" id="sanctum-fill"></span></span>
+      <span class="cap">The moment · unfolding</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ VENUE ═══════════════ -->
+<!-- ═══════════════ FILM BAND 2 ═══════════════ -->
+<div class="film-band"><div class="film-inner"><video muted loop playsinline preload="none" data-poster="assets/film/film2_poster.webp" data-src="assets/film/film2.mp4?v=pavan-pooja-vfx" aria-label="Pavan and Pooja celebration film"></video><p class="film-caption"><span class="film-eyebrow">The Celebration</span><span class="film-line">Music, laughter and a lifetime ahead</span></p></div></div>
+
+<section id="venue">
+  <img class="decor decor-toran decor-toran-2" src="assets/decor/toran.webp" alt="" aria-hidden="true">
+  <header class="sec-head">
+    <p class="eyebrow">Where the stars align</p>
+    <h2 class="sec-title gold-foil">The Venue</h2>
+  </header>
+
+  <div class="venue-card">
+    <div class="venue-art" style="background-image:url('assets/stills/venue_art.webp')"></div>
+    <div class="venue-info">
+      <h3 id="venue-name">Fairfield by Marriott</h3>
+      <p id="venue-address">Gogte Plaza, Belagavi - 591113</p>
+      <a id="map-link" href="#" target="_blank" rel="noopener" aria-label="Open venue location in Google Maps">
+        <img src="assets/stills/map.webp" width="1000" height="1072" loading="lazy" decoding="async" alt="Map showing the venue location">
+      </a>
+      <a id="maps-btn" class="btn-gold" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+        Open in Google Maps
+      </a>
+    </div>
+  </div>
+
+  <footer id="finale">
+    <p class="finale-eyebrow"><span class="fe-rule"></span>With love<span class="fe-rule"></span></p>
+    <h3 class="finale-script">Pavan &amp; Pooja</h3>
+    <p class="finale-heart" aria-hidden="true">♥</p>
+    <p class="finale-date">21st November 2026 · Belagavi</p>
+    <p class="finale-tag">#PavanWedsPooja</p>
+    <div class="world-gateway" aria-labelledby="world-gateway-title">
+      <p class="world-gateway-kicker" lang="hi">॥ मंगल प्रवेश ॥</p>
+      <a id="world-portal-link" class="world-portal-link" href="./world/index.html"
+        aria-labelledby="world-gateway-title world-gateway-hint">
+        <span class="world-portal-visual" aria-hidden="true">
+          <span class="world-gate-crown"></span>
+          <span class="world-gate-opening">
+            <span class="world-gate-door world-gate-door-left"></span>
+            <span class="world-gate-door world-gate-door-right"></span>
+          </span>
+          <span class="world-gate-threshold"></span>
+          <span class="world-gate-path"></span>
+        </span>
+        <span class="world-portal-action">
+          <strong id="world-gateway-title">Enter the Wedding World</strong>
+          <small id="world-gateway-hint">Step through the gates · join the baraat</small>
+        </span>
+        <span class="portal-tap-cue" aria-hidden="true">
+          <span class="portal-tap-hand">&#9757;&#65038;</span>
+          <span>Tap to enter</span>
+        </span>
+      </a>
+    </div>
+  </footer>
+</section>
+
+<!-- Golden scroll thread -->
+<div id="thread" aria-hidden="true"><i id="thread-lotus">🪷</i></div>
+
+<!-- Sound toggle -->
+<button id="sound-toggle" class="hidden" aria-label="Toggle sound">🔔</button>
+
+<!-- Full-screen handoff into the separately loaded 3D wedding world -->
+<div id="portal-transition" aria-hidden="true">
+  <div class="portal-transition-rays" aria-hidden="true"></div>
+  <p class="portal-transition-copy" role="status" aria-live="polite">
+    <span>॥ शुभ विवाह ॥</span>
+    <strong>The baraat awaits</strong>
+  </p>
+</div>
+
+<script src="config.js?v=20260719-lean"></script>
+<script src="app.js?v=20260720-parallax"></script>
+<script src="auto/auto.js?v=20261025"></script>
+</body>
+</html>
+

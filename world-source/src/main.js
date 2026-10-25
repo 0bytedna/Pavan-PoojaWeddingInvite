@@ -112,6 +112,9 @@ const LAYOUT = {
 // catches iPads and phones requesting a desktop user agent.
 const IS_MOBILE = window.matchMedia?.('(pointer: coarse)').matches
   || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const AUTO_TOUR = new URLSearchParams(window.location.search).get('auto') === '1';
+const AUTO_RETURN = new URLSearchParams(window.location.search).get('return');
+let autoTourReturnScheduled = false;
 
 // Collected per-frame updaters from animated assets
 const updaters = [];
@@ -1723,6 +1726,12 @@ function animate() {
   // Move every existing baraat member first, then let each asset apply its own
   // dance, instrument, breathing and fabric animation inside that wrapper.
   updateProcession(t, dt);
+  // The guided /auto/ route ends after the baraat has reached its welcome.
+  // Manual visitors stay in the world as long as they wish.
+  if (AUTO_TOUR && !autoTourReturnScheduled && t >= PROCESSION.arrivalEnd + 6) {
+    autoTourReturnScheduled = true;
+    setTimeout(() => { window.location.assign(AUTO_RETURN || '../auto/?done=1'); }, 800);
+  }
 
   // Firelight flicker plus a brief light/bloom crescendo at the welcome.
   const cueAge = t - arrivalCueAt;
