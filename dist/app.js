@@ -201,6 +201,14 @@ const audio = (() => {
   };
 })();
 
+// A browser may reject the first unmuted play request until the visitor has
+// made a real gesture. This covers the guided /auto/ route as well as the
+// regular invitation without changing the default sound-on preference.
+addEventListener("pointerdown", () => {
+  audio.init();
+  audio.startBgm();
+}, { once: true, passive: true });
+
 /* ═══════════════ FRAME RINGS — pre-decoded bitmap streaming ═
    The old engine decoded images on demand during scroll (decode
    hitches = lag). This one decodes OFF the main thread into
