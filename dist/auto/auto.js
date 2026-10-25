@@ -64,11 +64,12 @@
     const film = videos.find((v) => v.dataset.tourWatched !== "yes" && isCentered(v));
     if (film) { playFilm(film); return; }
     if (portal && isCentered(portal)) { enterWorld(); return; }
-    // The hero intentionally has a 450-viewport runway for all 181 frames.
-    // Travel that section in roughly 20 seconds (about 9 frames per second),
-    // then slow to an easy reading pace for the rest of the invitation.
+    // Pace from the actual rendered hero height. This preserves a cinematic
+    // 24-second frame sequence on full-motion devices, while the compact
+    // reduced-motion hero still receives a gentle eight-second introduction.
+    const heroHeight = hero?.offsetHeight || 0;
     const pixelsPerSecond = hero && inViewport(hero)
-      ? Math.max(innerHeight * 22, 8000)
+      ? Math.max(70, heroHeight / (heroHeight > innerHeight * 4 ? 24 : 8))
       : Math.max(innerHeight * .58, 430);
     window.scrollTo(0, window.scrollY + pixelsPerSecond * dt);
     if (window.scrollY + innerHeight >= document.documentElement.scrollHeight - 3) { stop(); return; }
