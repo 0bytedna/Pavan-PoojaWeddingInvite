@@ -3,6 +3,7 @@
   const returning = new URLSearchParams(location.search).has("done");
   const videos = [...document.querySelectorAll(".film-band video")];
   const portal = document.getElementById("world-portal-link");
+  const hero = document.getElementById("hero");
   let running = false, held = false, inFilm = false, inWorld = false, raf = 0;
   let last = 0;
 
@@ -32,6 +33,10 @@
     const center = innerHeight / 2;
     return r.top <= center && r.bottom >= center;
   };
+  const inViewport = (element) => {
+    const r = element.getBoundingClientRect();
+    return r.bottom > 0 && r.top < innerHeight;
+  };
   const stop = () => { running = false; cancelAnimationFrame(raf); };
   const start = () => { if (!running && !held && !inFilm && !inWorld) { running = true; last = performance.now(); raf = requestAnimationFrame(step); } };
   const resumeAfterFilm = () => { inFilm = false; setTimeout(start, 650); };
@@ -56,13 +61,20 @@
     const film = videos.find((v) => v.dataset.tourWatched !== "yes" && isCentered(v));
     if (film) { playFilm(film); return; }
     if (portal && isCentered(portal)) { enterWorld(); return; }
-    // 46px/sec lets the 181-frame hero sequence breathe rather than jump.
-    window.scrollBy(0, 46 * dt);
+    // The hero intentionally has a 450-viewport runway for all 181 frames.
+    // Travel that section in roughly 20 seconds (about 9 frames per second),
+    // then slow to an easy reading pace for the rest of the invitation.
+    const pixelsPerSecond = hero && inViewport(hero)
+      ? Math.max(innerHeight * 22, 8000)
+      : Math.max(innerHeight * .58, 430);
+    window.scrollTo(0, window.scrollY + pixelsPerSecond * dt);
     if (window.scrollY + innerHeight >= document.documentElement.scrollHeight - 3) { stop(); return; }
     raf = requestAnimationFrame(step);
   };
-  const hold = () => { held = true; stop(); };
-  const release = () => { held = false; start(); };
+  // Only a real guest touch controls the pause state; scripted opening of the
+  // seal can never accidentally leave the tour held.
+  const hold = (event) => { if (event.isTrusted) { held = true; stop(); } };
+  const release = (event) => { if (event.isTrusted) { held = false; start(); } };
   addEventListener("pointerdown", hold, { passive: true });
   addEventListener("pointerup", release, { passive: true });
   addEventListener("pointercancel", release, { passive: true });
