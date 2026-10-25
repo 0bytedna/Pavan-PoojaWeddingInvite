@@ -4,6 +4,7 @@
   const videos = [...document.querySelectorAll(".film-band video")];
   const portal = document.getElementById("world-portal-link");
   const hero = document.getElementById("hero");
+  const hiddenMoment = document.getElementById("sanctum");
   let running = false, held = false, tourReady = false, inFilm = false, inWorld = false, raf = 0;
   let last = 0;
 
@@ -37,6 +38,10 @@
     const r = element.getBoundingClientRect();
     return r.bottom > 0 && r.top < innerHeight;
   };
+  const pacedFrames = (element, seconds, floor) => {
+    const height = element?.offsetHeight || 0;
+    return Math.max(floor, height / seconds);
+  };
   const stop = () => { running = false; cancelAnimationFrame(raf); };
   const start = () => {
     if (!tourReady || running || held || inFilm || inWorld) return;
@@ -64,13 +69,15 @@
     const film = videos.find((v) => v.dataset.tourWatched !== "yes" && isCentered(v));
     if (film) { playFilm(film); return; }
     if (portal && isCentered(portal)) { enterWorld(); return; }
-    // Pace from the actual rendered hero height. This preserves a cinematic
-    // 24-second frame sequence on full-motion devices, while the compact
-    // reduced-motion hero still receives a gentle eight-second introduction.
+    // Three deliberately separate tempos: the hero gets time for all 181
+    // frames, the Hidden Moment has its own calmer 121-frame passage, and
+    // ordinary invitation copy stays readable between the cinematic scenes.
     const heroHeight = hero?.offsetHeight || 0;
     const pixelsPerSecond = hero && inViewport(hero)
-      ? Math.max(70, heroHeight / (heroHeight > innerHeight * 4 ? 24 : 8))
-      : Math.max(innerHeight * .58, 430);
+      ? pacedFrames(hero, heroHeight > innerHeight * 4 ? 24 : 8, 70)
+      : hiddenMoment && inViewport(hiddenMoment)
+        ? pacedFrames(hiddenMoment, 18, 95)
+        : Math.max(innerHeight * .42, 300);
     window.scrollTo(0, window.scrollY + pixelsPerSecond * dt);
     if (window.scrollY + innerHeight >= document.documentElement.scrollHeight - 3) { stop(); return; }
     raf = requestAnimationFrame(step);
