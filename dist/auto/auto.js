@@ -1,5 +1,10 @@
 /* Guided invitation tour. The main invitation remains fully untouched at /. */
 (() => {
+  const PACE = window.AUTO_TOUR_PACE || {
+    heroSeconds: 16,
+    hiddenMomentSeconds: 18,
+    readingPixelsPerSecond: 300,
+  };
   const returning = new URLSearchParams(location.search).has("done");
   const videos = [...document.querySelectorAll(".film-band video")];
   const portal = document.getElementById("world-portal-link");
@@ -74,10 +79,10 @@
     // ordinary invitation copy stays readable between the cinematic scenes.
     const heroHeight = hero?.offsetHeight || 0;
     const pixelsPerSecond = hero && inViewport(hero)
-      ? pacedFrames(hero, heroHeight > innerHeight * 4 ? 16 : 6, 70)
+      ? pacedFrames(hero, heroHeight > innerHeight * 4 ? PACE.heroSeconds : 6, 70)
       : hiddenMoment && inViewport(hiddenMoment)
-        ? pacedFrames(hiddenMoment, 18, 95)
-        : Math.max(innerHeight * .42, 300);
+        ? pacedFrames(hiddenMoment, PACE.hiddenMomentSeconds, 95)
+        : PACE.readingPixelsPerSecond;
     window.scrollTo(0, window.scrollY + pixelsPerSecond * dt);
     if (window.scrollY + innerHeight >= document.documentElement.scrollHeight - 3) { stop(); return; }
     raf = requestAnimationFrame(step);
