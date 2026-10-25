@@ -69,12 +69,12 @@
     const film = videos.find((v) => v.dataset.tourWatched !== "yes" && isCentered(v));
     if (film) { playFilm(film); return; }
     if (portal && isCentered(portal)) { enterWorld(); return; }
-    // Three deliberately separate tempos: the hero gets time for all 181
-    // frames, the Hidden Moment has its own calmer 121-frame passage, and
+    // Three deliberately separate tempos: the hero moves briskly through all
+    // 181 frames, the Hidden Moment has its own calmer 121-frame passage, and
     // ordinary invitation copy stays readable between the cinematic scenes.
     const heroHeight = hero?.offsetHeight || 0;
     const pixelsPerSecond = hero && inViewport(hero)
-      ? pacedFrames(hero, heroHeight > innerHeight * 4 ? 24 : 8, 70)
+      ? pacedFrames(hero, heroHeight > innerHeight * 4 ? 16 : 6, 70)
       : hiddenMoment && inViewport(hiddenMoment)
         ? pacedFrames(hiddenMoment, 18, 95)
         : Math.max(innerHeight * .42, 300);
